@@ -1,0 +1,8 @@
+alert:
+  threshold:
+    default: 10
+  sampleRate:
+    default: 10
+stats:
+  interval:
+    default: 10
