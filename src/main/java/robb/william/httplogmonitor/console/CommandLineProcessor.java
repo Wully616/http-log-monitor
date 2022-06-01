@@ -8,16 +8,9 @@ import org.springframework.stereotype.Component;
 import robb.william.httplogmonitor.config.FileConfig;
 import robb.william.httplogmonitor.metrics.AlertConfig;
 import robb.william.httplogmonitor.metrics.StatsConfig;
-import robb.william.httplogmonitor.reader.CsvLogReader;
 import robb.william.httplogmonitor.reader.ILogReader;
 import robb.william.httplogmonitor.reader.LogReaderFactory;
-import robb.william.httplogmonitor.reader.model.LogLine;
-import robb.william.httplogmonitor.reader.strategies.PathCsvLogReader;
 import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
-import robb.william.httplogmonitor.reader.strategies.StdinCsvLogReader;
-
-import java.io.IOException;
-import java.util.stream.Stream;
 
 @Component
 public class CommandLineProcessor implements ApplicationRunner {
@@ -27,13 +20,11 @@ public class CommandLineProcessor implements ApplicationRunner {
     private AlertConfig alertConfig;
     private StatsConfig statsConfig;
     private LogReaderFactory logReaderFactory;
-
     public CommandLineProcessor(FileConfig fileConfig, AlertConfig alertConfig, StatsConfig statsConfig, LogReaderFactory logReaderFactory) {
         this.fileConfig = fileConfig;
         this.alertConfig = alertConfig;
         this.statsConfig = statsConfig;
         this.logReaderFactory = logReaderFactory;
-
     }
 
     @Override
@@ -53,11 +44,7 @@ public class CommandLineProcessor implements ApplicationRunner {
         ILogReader logReader = logReaderFactory.getStrategy(readerStrategy);
 
         // Read the log using stream
-        try(Stream<LogLine> logLineStream = logReader.readLog()){
-            logLineStream.forEach(logLine -> {
-                //logger.info(logLine.toString());
-            });
-        }
+        logReader.readLog();
 
     }
 

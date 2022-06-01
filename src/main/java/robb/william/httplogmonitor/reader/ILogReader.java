@@ -1,10 +1,8 @@
 package robb.william.httplogmonitor.reader;
 
-import robb.william.httplogmonitor.reader.model.LogLine;
 import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
 
 import java.io.InputStream;
-import java.util.stream.Stream;
 
 public interface ILogReader {
 
@@ -12,6 +10,7 @@ public interface ILogReader {
 
     InputStream getLogStream();
 
-    Stream<LogLine> readLog();
+    void readLog();
+
 
 }

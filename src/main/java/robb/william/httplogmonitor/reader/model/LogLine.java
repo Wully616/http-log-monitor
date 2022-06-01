@@ -7,7 +7,7 @@ public class LogLine {
     String remoteHost;
     String rfc931;
     String authUser;
-    int date;
+    long date;
     String request;
     int status;
     int bytes;
@@ -36,11 +36,11 @@ public class LogLine {
         this.authUser = authUser;
     }
 
-    public int getDate() {
+    public long getDate() {
         return date;
     }
 
-    public void setDate(int date) {
+    public void setDate(long date) {
         this.date = date;
     }
 

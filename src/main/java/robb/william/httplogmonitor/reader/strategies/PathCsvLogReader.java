@@ -2,13 +2,13 @@ package robb.william.httplogmonitor.reader.strategies;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import robb.william.httplogmonitor.config.FileConfig;
+import robb.william.httplogmonitor.disruptor.buffer.LogEventBuffer;
 import robb.william.httplogmonitor.reader.CsvLogReader;
-import robb.william.httplogmonitor.reader.model.LogLine;
 
 import java.io.*;
-import java.util.stream.Stream;
 
 @Component
 public class PathCsvLogReader extends CsvLogReader {
@@ -16,7 +16,9 @@ public class PathCsvLogReader extends CsvLogReader {
 
     private FileConfig fileConfig;
 
-    public PathCsvLogReader(FileConfig fileConfig) {
+    @Autowired
+    public PathCsvLogReader(LogEventBuffer logEventBuffer, FileConfig fileConfig) {
+        super(logEventBuffer);
         this.fileConfig = fileConfig;
     }
 
@@ -43,8 +45,8 @@ public class PathCsvLogReader extends CsvLogReader {
     }
 
     @Override
-    public Stream<LogLine> readLog() {
+    public void readLog() {
         logger.info("Reading log file from file: {}", fileConfig.getFilePath());
-        return super.readLog();
+        super.readLog();
     }
 }

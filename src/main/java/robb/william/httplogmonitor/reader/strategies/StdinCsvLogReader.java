@@ -2,16 +2,21 @@ package robb.william.httplogmonitor.reader.strategies;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import robb.william.httplogmonitor.disruptor.buffer.LogEventBuffer;
 import robb.william.httplogmonitor.reader.CsvLogReader;
-import robb.william.httplogmonitor.reader.model.LogLine;
 
 import java.io.InputStream;
-import java.util.stream.Stream;
 
 @Component
 public class StdinCsvLogReader extends CsvLogReader {
     Logger logger = LoggerFactory.getLogger(StdinCsvLogReader.class);
+
+    @Autowired
+    public StdinCsvLogReader(LogEventBuffer logEventBuffer) {
+        super(logEventBuffer);
+    }
 
     @Override
     public ReaderStrategy getStrategyType() {
@@ -24,8 +29,8 @@ public class StdinCsvLogReader extends CsvLogReader {
     }
 
     @Override
-    public Stream<LogLine> readLog() {
+    public void readLog() {
         logger.info("Reading log file from stdin");
-        return super.readLog();
+        super.readLog();
     }
 }
