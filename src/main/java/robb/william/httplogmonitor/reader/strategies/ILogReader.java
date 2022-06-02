@@ -1,6 +1,4 @@
-package robb.william.httplogmonitor.reader;
-
-import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
+package robb.william.httplogmonitor.reader.strategies;
 
 import java.io.InputStream;
 

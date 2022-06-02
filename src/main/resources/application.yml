@@ -1,8 +1,20 @@
-alert:
-  threshold:
-    default: 10
-  sampleRate:
-    default: 10
+# HTTP Log Monitor Configuration Options
+highTrafficAlert:
+  threshold: 10
+  sampleWindow: 120
+  enabled: true
 stats:
-  interval:
-    default: 10
+  printInterval: 10
+  enabled: true
+path:
+  file:
+  stdin:
+
+eventBuffer:
+  size: 16
+
+
+# Spring configuration
+spring:
+  main:
+    web-application-type: none

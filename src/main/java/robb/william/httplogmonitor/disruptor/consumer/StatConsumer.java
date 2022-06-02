@@ -3,6 +3,7 @@ package robb.william.httplogmonitor.disruptor.consumer;
 import com.lmax.disruptor.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import robb.william.httplogmonitor.disruptor.event.LogEvent;
 import robb.william.httplogmonitor.reader.model.LogLine;
@@ -15,11 +16,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
+@ConditionalOnProperty(prefix = "stats", name = "enabled", havingValue = "true")
 public class StatConsumer implements EventHandler<LogEvent> {
 
     private final Logger logger = LoggerFactory.getLogger(StatConsumer.class);
 
     Map<String, Integer> sectionStats = new HashMap<>();
+    LinkedHashMap<String, Integer> sectionStatsSorted = new LinkedHashMap<>();
 
     private static final Pattern sectionPattern = Pattern.compile("\\s\\/(\\w+|\\d+)[\\/|\\s]");
     long currentTimeBucket = -1;
@@ -40,17 +43,16 @@ public class StatConsumer implements EventHandler<LogEvent> {
             //we have entered a new bucket, print the current stats, wipe and continue
             logger.info("Stats - for the time period {} to {}:", currentTimeBucket, timeBucket - 1);
             //LinkedHashMap preserve the ordering of elements in which they are inserted
-            LinkedHashMap<String, Integer> reverseSortedMap = new LinkedHashMap<>();
+            sectionStatsSorted.clear();
             sectionStats.entrySet().stream()
                     .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                    .forEachOrdered(e -> reverseSortedMap.put(e.getKey(),e.getValue()));
-            logger.info("\tTop 10 hit sections: {}", reverseSortedMap);
+                    .forEachOrdered(e -> sectionStatsSorted.put(e.getKey(),e.getValue()));
+            logger.info("\tTop 10 hit sections: {}", sectionStatsSorted);
             sectionStats.clear();
         }
         if(timeBucket > currentTimeBucket) currentTimeBucket = timeBucket;
         //only count it if its within the current timebucket
         String section = "";
-
 
         //add to the current buckets stats
         Matcher matcher = sectionPattern.matcher(logLine.getRequest());

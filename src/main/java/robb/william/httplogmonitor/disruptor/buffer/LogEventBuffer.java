@@ -6,6 +6,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import robb.william.httplogmonitor.disruptor.event.LogEvent;
 
@@ -17,10 +18,13 @@ public class LogEventBuffer {
     private final Disruptor<LogEvent> logEventDisruptor;
     private final EventHandler<LogEvent>[] logEventConsumers;
 
+    private final int bufferSize;
 
-    public LogEventBuffer(EventHandler<LogEvent>[] logEventConsumers) {
+    public LogEventBuffer(EventHandler<LogEvent>[] logEventConsumers, @Value("${eventBuffer.size}") int bufferSize) {
+        this.bufferSize = bufferSize;
         this.logEventConsumers = logEventConsumers;
         this.logEventDisruptor = createLogEventDisruptor();
+
     }
 
     public RingBuffer<LogEvent> getRingBuffer(){
@@ -29,7 +33,6 @@ public class LogEventBuffer {
 
     public Disruptor<LogEvent> createLogEventDisruptor(){
         logger.info("Creating log event disruptor");
-        int bufferSize = 64;
         Disruptor<LogEvent> disruptor =
                 new Disruptor<>(LogEvent::new, bufferSize, DaemonThreadFactory.INSTANCE);
 

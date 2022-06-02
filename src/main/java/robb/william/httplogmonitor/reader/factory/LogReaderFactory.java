@@ -1,7 +1,8 @@
-package robb.william.httplogmonitor.reader;
+package robb.william.httplogmonitor.reader.factory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import robb.william.httplogmonitor.reader.strategies.ILogReader;
 import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
 
 import java.util.HashMap;

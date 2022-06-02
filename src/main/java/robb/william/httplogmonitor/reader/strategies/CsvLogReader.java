@@ -1,4 +1,4 @@
-package robb.william.httplogmonitor.reader;
+package robb.william.httplogmonitor.reader.strategies;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 public abstract class CsvLogReader implements ILogReader {
     public static final Logger logger = LoggerFactory.getLogger(CsvLogReader.class);
 
-    final CsvMapper mapper = new CsvMapper();
+    private final CsvMapper mapper = new CsvMapper();
 
-    final String expectedHeader = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\"";
+    private final String expectedHeader = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\"";
 
-    final CsvSchema schema = CsvSchema.builder()
+    private final CsvSchema schema = CsvSchema.builder()
             .addColumn("remoteHost")
             .addColumn("rfc931")
             .addColumn("authUser")
@@ -38,13 +38,13 @@ public abstract class CsvLogReader implements ILogReader {
             .addColumn("bytes")
             .build();
 
-    final ObjectReader reader = mapper
+    private final ObjectReader reader = mapper
             .readerFor(LogLine.class)
             .with(schema);
 
-    private boolean shouldRead = true;
+    private final LogEventBuffer logEventBuffer;
 
-    private LogEventBuffer logEventBuffer;
+    private boolean shouldRead = true;
 
     public CsvLogReader(LogEventBuffer logEventBuffer) {
         this.logEventBuffer = logEventBuffer;
