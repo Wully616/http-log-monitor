@@ -19,8 +19,8 @@ public class LogReaderFactory {
         createStrategy(iLogReaderSet);
     }
 
-    public ILogReader getStrategy(ReaderStrategy ReaderStrategy) {
-        return strategies.get(ReaderStrategy);
+    public ILogReader getStrategy(ReaderStrategy readerStrategy) {
+        return strategies.get(readerStrategy);
     }
 
     private void createStrategy(Set<ILogReader> strategySet) {

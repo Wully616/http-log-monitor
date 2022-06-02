@@ -8,7 +8,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import robb.william.httplogmonitor.disruptor.buffer.LogEventBuffer;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 @Component
 @ConditionalOnExpression("'${path.file}' != ''") //only create the bean if the path is not the default empty string
@@ -42,7 +45,7 @@ public class PathCsvLogReader extends CsvLogReader {
         } else {
             logger.error("File path argument is empty.");
         }
-        return new ByteArrayInputStream(new byte[0]);
+        return super.getLogStream();
     }
 
     @Override

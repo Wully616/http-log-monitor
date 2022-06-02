@@ -4,14 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.lmax.disruptor.RingBuffer;
+import org.assertj.core.util.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import robb.william.httplogmonitor.disruptor.buffer.LogEventBuffer;
-import robb.william.httplogmonitor.disruptor.event.LogEvent;
-import robb.william.httplogmonitor.reader.model.LogLine;
+import robb.william.httplogmonitor.reader.model.CommonLogFormat;
 
-import javax.annotation.PreDestroy;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -20,6 +18,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class CsvLogReader implements ILogReader {
     public static final Logger logger = LoggerFactory.getLogger(CsvLogReader.class);
@@ -28,7 +28,9 @@ public abstract class CsvLogReader implements ILogReader {
 
     private final String expectedHeader = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\"";
 
-    private final CsvSchema schema = CsvSchema.builder()
+    private static final Pattern sectionPattern = Pattern.compile("(\\w+)\\s\\/(\\w+|\\d+)[\\/|\\s]");
+
+    private static final CsvSchema schema = CsvSchema.builder()
             .addColumn("remoteHost")
             .addColumn("rfc931")
             .addColumn("authUser")
@@ -39,7 +41,7 @@ public abstract class CsvLogReader implements ILogReader {
             .build();
 
     private final ObjectReader reader = mapper
-            .readerFor(LogLine.class)
+            .readerFor(CommonLogFormat.class)
             .with(schema);
 
     private final LogEventBuffer logEventBuffer;
@@ -57,12 +59,8 @@ public abstract class CsvLogReader implements ILogReader {
 
     @Override
     public void readLog() {
-
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
-            // We dont use try with resources here, because we automatically close the whole stream at the end
-            logger.info("-- opening stream --");
-            RingBuffer<LogEvent> ringBuffer = logEventBuffer.getRingBuffer();
             try (InputStreamReader inputStreamReader = new InputStreamReader(getLogStream());
                  BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
                 while (shouldRead) {
@@ -72,9 +70,12 @@ public abstract class CsvLogReader implements ILogReader {
                         TimeUnit.SECONDS.sleep(1);
                         continue;
                     }
-                    parseLogLine(line).ifPresent(value ->
-                            ringBuffer.publishEvent((event, sequence, buffer) -> event.setLogLine(value)));
-
+                    parseLogLine(line).ifPresent(value -> {
+                        // Extract any additional data from the fields here so we only do it once.
+                        CommonLogFormat log = extractAdditionalFields(value);
+                        //Publish the event
+                        logEventBuffer.publish(log);
+                    });
 
                 }
             } catch (Exception e) {
@@ -83,17 +84,19 @@ public abstract class CsvLogReader implements ILogReader {
         });
 
 
-//
-//        return bufferedReader
-//                .lines()
-//                .onClose(asUncheckedAutoCloseable(bufferedReader))
-//                .map(parseLogLine())
-//                .filter(Objects::nonNull)
-//                .peek(logLine -> logger.info(logLine.toString()));
-
     }
 
-    private Optional<LogLine> parseLogLine(String line) {
+    public CommonLogFormat extractAdditionalFields(CommonLogFormat log) {
+        Matcher matcher = sectionPattern.matcher(log.getRequest());
+        if (matcher.find()) {
+            log.setVerb(matcher.group(1).toUpperCase());
+            log.setSection(matcher.group(2));
+        }
+        return log;
+    }
+
+    @VisibleForTesting
+    public Optional<CommonLogFormat> parseLogLine(String line) {
 
         try {
             return Optional.of(reader.readValue(line));
@@ -105,22 +108,13 @@ public abstract class CsvLogReader implements ILogReader {
             }
         }
         return Optional.empty();
-
     }
 
-    static Runnable asUncheckedAutoCloseable(AutoCloseable ac) {
-        return () -> {
-            try {
-                logger.info("-- closing stream --");
-                ac.close();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
+    public boolean isShouldRead() {
+        return shouldRead;
     }
 
-    @PreDestroy
-    public void destroy() {
-        shouldRead = false;
+    public void setShouldRead(boolean shouldRead) {
+        this.shouldRead = shouldRead;
     }
 }

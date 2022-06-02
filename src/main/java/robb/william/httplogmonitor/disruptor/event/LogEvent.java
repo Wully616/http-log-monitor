@@ -1,19 +1,21 @@
 package robb.william.httplogmonitor.disruptor.event;
 
-import robb.william.httplogmonitor.reader.model.LogLine;
+import robb.william.httplogmonitor.reader.model.CommonLogFormat;
 
-//This is a holder class for logLine objects for within the Disruptor.
-//The Disruptor will be preallocated with these objects.
+/*
+    This is a holder class for CommonLogFormat objects for within the Disruptor.
+    The Disruptor will be preallocated with these objects.
+ */
 public final class LogEvent {
 
-    private LogLine logLine;
+    private CommonLogFormat commonLogFormat;
 
-    public LogLine getLogLine() {
-        return logLine;
+    public CommonLogFormat getLogLine() {
+        return commonLogFormat;
     }
 
-    public void setLogLine(LogLine logLine) {
-        this.logLine = logLine;
+    public void setLogLine(CommonLogFormat commonLogFormat) {
+        this.commonLogFormat = commonLogFormat;
     }
 
     public LogEvent() {
@@ -22,7 +24,7 @@ public final class LogEvent {
     @Override
     public String toString() {
         return "LogEvent{" +
-                "logLine=" + logLine +
+                "commonLogFormat=" + commonLogFormat +
                 '}';
     }
 }

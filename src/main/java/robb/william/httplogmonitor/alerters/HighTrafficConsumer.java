@@ -1,4 +1,4 @@
-package robb.william.httplogmonitor.disruptor.consumer;
+package robb.william.httplogmonitor.alerters;
 
 import com.lmax.disruptor.EventHandler;
 import org.slf4j.Logger;
@@ -10,24 +10,23 @@ import robb.william.httplogmonitor.disruptor.event.LogEvent;
 
 @Component
 @ConditionalOnProperty(prefix = "highTrafficAlert", name = "enabled", havingValue = "true")
-public class HighTrafficAlertConsumer implements EventHandler<LogEvent> {
+public final class HighTrafficConsumer implements EventHandler<LogEvent> {
 
-    private final Logger logger = LoggerFactory.getLogger(HighTrafficAlertConsumer.class);
+    private final Logger logger = LoggerFactory.getLogger(HighTrafficConsumer.class);
 
     //Store traffic for X seconds in a circular buffer
     //Each array index is a 1 second bucket
     private final int[] circularBuffer;
     private final int bufferSize;
 
-    int alertHitsPerSecond;
-    int head = 0;
-    int tail = 0;
-    long headTimestamp = -1;
-    int movingSum = 0;
-    boolean alertActive = false;
+    private final int alertHitsPerSecond;
+    private int tail = 0;
+    private long headTimestamp = -1;
+    private int movingSum = 0;
+    private boolean alertActive = false;
 
-    public HighTrafficAlertConsumer(@Value("${highTrafficAlert.sampleWindow}") int sampleWindow,
-                                    @Value("${highTrafficAlert.threshold}") int threshold) {
+    public HighTrafficConsumer(@Value("${highTrafficAlert.sampleWindow}") int sampleWindow,
+                               @Value("${highTrafficAlert.threshold}") int threshold) {
         this.bufferSize = sampleWindow;
         this.alertHitsPerSecond = threshold;
         this.circularBuffer = new int[bufferSize];
@@ -35,56 +34,53 @@ public class HighTrafficAlertConsumer implements EventHandler<LogEvent> {
     }
 
     @Override
-    public void onEvent(LogEvent logEvent, long l, boolean b) throws Exception {
-        //logger.info("#2 sequence: {}, endOfbatch: {}, event: {},", l, b, logEvent.toString());
+    public void onEvent(LogEvent logEvent, long l, boolean b) {
         long date = logEvent.getLogLine().getDate();
-
         moveWindow(date);
         addToWindow(date);
         checkAlert();
     }
 
 
-    private void checkAlert(){
+    private void checkAlert() {
         //calculate the window average
         int movingAvg = movingSum / bufferSize;
-        //logger.info("date: {}, avg: {}, headTimestamp: {}, tailTimestamp: {}, head: {}, tail: {}", date, movingAvg, headTimestamp, headTimestamp-120,head,tail);
 
-        if(!alertActive && movingAvg >= alertHitsPerSecond){
-            logger.info("High traffic generated an alert - hits = {}, triggered at {}", movingAvg, headTimestamp);
+        if (!alertActive && movingAvg >= alertHitsPerSecond) {
+            logger.warn("High traffic generated an alert - hits = {}, triggered at {}", movingAvg, headTimestamp);
             alertActive = true;
         }
 
-        if(alertActive && movingAvg < alertHitsPerSecond){
+        if (alertActive && movingAvg < alertHitsPerSecond) {
             logger.info("Recovered from high traffic - hits = {}, recovered at {}", movingAvg, headTimestamp);
             alertActive = false;
         }
     }
 
-    private void addToWindow(long date){
+    private void addToWindow(long date) {
         // increment an existing element in the window
-        if(date >= headTimestamp - bufferSize && date < headTimestamp + 1){
+        if (date >= headTimestamp - bufferSize && date < headTimestamp + 1) {
             //this record is within the current window
 
             //increment sum, not removing anything yet since the window hasn't moved
             movingSum += 1;
 
             //get the element
-            int index = (int)(date % bufferSize);
+            int index = (int) (date % bufferSize);
             //increment the element in the window
             circularBuffer[index] += 1;
         }
     }
 
-    private void moveWindow(long date){
+    private void moveWindow(long date) {
         // shift the window if we got newer data coming in
-        if(date > headTimestamp){
+        if (date > headTimestamp) {
             //remove the current tail value
             movingSum -= circularBuffer[tail];
 
             //shift the window
             headTimestamp = date;
-            head = (int)(date % bufferSize);
+            int head = (int) (date % bufferSize);
             //reset the value at the head
             circularBuffer[head] = 0;
 
