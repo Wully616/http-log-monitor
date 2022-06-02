@@ -37,10 +37,11 @@ public class PathCsvLogReader extends CsvLogReader {
 
         if(filePath != null && !filePath.isEmpty()) {
             try {
+                logger.info("Reading log file from file: {}", filePath);
                 File initialFile = new File(filePath);
                 return new FileInputStream(initialFile);
             } catch (FileNotFoundException e) {
-                logger.error("File not found: {}", filePath, e);
+                logger.error("File not found. Please check the path and restart the application: {}", filePath);
             }
         } else {
             logger.error("File path argument is empty.");
@@ -48,9 +49,4 @@ public class PathCsvLogReader extends CsvLogReader {
         return super.getLogStream();
     }
 
-    @Override
-    public void readLog() {
-        logger.info("Reading log file from file: {}", filePath);
-        super.readLog();
-    }
 }

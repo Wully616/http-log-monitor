@@ -10,10 +10,8 @@ import org.slf4j.LoggerFactory;
 import robb.william.httplogmonitor.disruptor.buffer.LogEventBuffer;
 import robb.william.httplogmonitor.reader.model.CommonLogFormat;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import javax.annotation.PreDestroy;
+import java.io.*;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,6 +45,7 @@ public abstract class CsvLogReader implements ILogReader {
     private final LogEventBuffer logEventBuffer;
 
     private boolean shouldRead = true;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public CsvLogReader(LogEventBuffer logEventBuffer) {
         this.logEventBuffer = logEventBuffer;
@@ -58,34 +57,44 @@ public abstract class CsvLogReader implements ILogReader {
     }
 
     @Override
-    public void readLog() {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(() -> {
-            try (InputStreamReader inputStreamReader = new InputStreamReader(getLogStream());
-                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-                while (shouldRead) {
+    public Runnable readLog() {
+        Runnable task = () -> {
+            InputStream inputStream = getLogStream();
+            if (inputStream != null) {
+                try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                     BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+                    while (shouldRead) {
 
-                    var line = bufferedReader.readLine();
-                    if (line == null) {
-                        TimeUnit.SECONDS.sleep(1);
-                        continue;
+                        var line = bufferedReader.readLine();
+                        if (line == null) {
+                            TimeUnit.SECONDS.sleep(1);
+                            continue;
+                        }
+                        parseLogLine(line).ifPresent(value -> {
+                            // Extract any additional data from the fields here so we only do it once.
+                            CommonLogFormat log = extractAdditionalFields(value);
+                            //Publish the event
+                            logEventBuffer.publish(log);
+                        });
+
                     }
-                    parseLogLine(line).ifPresent(value -> {
-                        // Extract any additional data from the fields here so we only do it once.
-                        CommonLogFormat log = extractAdditionalFields(value);
-                        //Publish the event
-                        logEventBuffer.publish(log);
-                    });
-
+                } catch (IOException | InterruptedException e) {
+                    logger.error("Exception when reading file. Please restart the application", e);
                 }
-            } catch (Exception e) {
-                logger.error("Exception when reading file", e);
+            } else {
+                logger.error("Log input data stream is null");
             }
-        });
-
+        };
+        executorService.execute(task);
+        return task;
 
     }
 
+    public void setExecutorService(ExecutorService service) {
+        executorService = service;
+    }
+
+    @VisibleForTesting
     public CommonLogFormat extractAdditionalFields(CommonLogFormat log) {
         Matcher matcher = sectionPattern.matcher(log.getRequest());
         if (matcher.find()) {
@@ -110,11 +119,8 @@ public abstract class CsvLogReader implements ILogReader {
         return Optional.empty();
     }
 
-    public boolean isShouldRead() {
-        return shouldRead;
-    }
-
-    public void setShouldRead(boolean shouldRead) {
-        this.shouldRead = shouldRead;
+    @PreDestroy
+    public void preDestroy() {
+        shouldRead = false;
     }
 }

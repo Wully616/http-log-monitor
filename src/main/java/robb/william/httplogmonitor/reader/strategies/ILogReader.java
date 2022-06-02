@@ -8,7 +8,7 @@ public interface ILogReader {
 
     InputStream getLogStream();
 
-    void readLog();
+    Runnable readLog();
 
 
 }

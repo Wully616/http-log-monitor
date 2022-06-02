@@ -55,8 +55,8 @@ public class LogEventBufferTest {
         var eventOne = logEventDisruptor.get(1);
 
         assertNotSame(eventOne, eventZero);
-        assertNull(eventZero.getLogLine());
-        assertNull(eventOne.getLogLine());
+        assertNull(eventZero.getCommonLogFormat());
+        assertNull(eventOne.getCommonLogFormat());
 
     }
 
@@ -67,8 +67,8 @@ public class LogEventBufferTest {
         CommonLogFormat log = new CommonLogFormat();
         buffer.publish(log);
         var eventZero = logEventDisruptor.get(0);
-        assertNotNull(eventZero.getLogLine());
-        assertEquals(log, eventZero.getLogLine());
+        assertNotNull(eventZero.getCommonLogFormat());
+        assertEquals(log, eventZero.getCommonLogFormat());
     }
 
 

@@ -49,7 +49,7 @@ public final class StatConsumer implements EventHandler<LogEvent> {
 
     @Override
     public void onEvent(LogEvent logEvent, long l, boolean b) {
-        CommonLogFormat logLine = logEvent.getLogLine();
+        CommonLogFormat logLine = logEvent.getCommonLogFormat();
 
         //Time bucket is a unix timestamp, clamped down to the nearest interval seconds
         int timeBucket = ((int) (logLine.getDate() / interval)) * interval;
@@ -147,7 +147,7 @@ public final class StatConsumer implements EventHandler<LogEvent> {
         public void addStats(CommonLogFormat log) {
             totalRequests++;
             bytes += log.getBytes();
-            hosts.add(log.getRemotehost());
+            hosts.add(log.getRemoteHost());
 
             int status = (log.getStatus() / 100) * 100; //clamps the http status down to nearest 100
             responseStatus.merge(status, 1, Integer::sum);

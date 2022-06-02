@@ -35,7 +35,7 @@ public final class HighTrafficConsumer implements EventHandler<LogEvent> {
 
     @Override
     public void onEvent(LogEvent logEvent, long l, boolean b) {
-        long date = logEvent.getLogLine().getDate();
+        long date = logEvent.getCommonLogFormat().getDate();
         moveWindow(date);
         addToWindow(date);
         checkAlert();

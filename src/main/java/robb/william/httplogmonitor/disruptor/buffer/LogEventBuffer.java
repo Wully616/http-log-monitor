@@ -59,7 +59,7 @@ public class LogEventBuffer {
     }
 
     public void publish(CommonLogFormat log) {
-        logEventDisruptor.publishEvent(((logEvent, l) -> logEvent.setLogLine(log)));
+        logEventDisruptor.publishEvent(((logEvent, l) -> logEvent.setCommonLogFormat(log)));
     }
 
     public RingBuffer<LogEvent> getRingBuffer() {

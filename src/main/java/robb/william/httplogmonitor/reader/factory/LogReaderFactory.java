@@ -7,6 +7,7 @@ import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Component
@@ -16,16 +17,22 @@ public class LogReaderFactory {
 
     @Autowired
     public LogReaderFactory(Set<ILogReader> iLogReaderSet) {
-        createStrategy(iLogReaderSet);
+        setStrategies(iLogReaderSet);
     }
 
     public ILogReader getStrategy(ReaderStrategy readerStrategy) {
+        if (strategies == null || strategies.isEmpty()) return null;
         return strategies.get(readerStrategy);
     }
 
-    private void createStrategy(Set<ILogReader> strategySet) {
+    private void setStrategies(Set<ILogReader> strategySet) {
+        if (strategySet == null || strategySet.isEmpty()) return;
         strategies = new HashMap<>();
-        strategySet.forEach(
-                strategy -> strategies.put(strategy.getStrategyType(), strategy));
+        strategySet.stream()
+                .filter(Objects::nonNull)
+                .filter(s -> s.getStrategyType() != null)
+                .forEach(
+                        strategy -> strategies.put(strategy.getStrategyType(), strategy)
+                );
     }
 }
