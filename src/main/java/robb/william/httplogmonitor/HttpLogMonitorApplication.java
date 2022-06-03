@@ -56,10 +56,9 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 				//Set path.stdin property to simulate passing a file to std input if redirection/piping is not available, like in intellij
 				FileInputStream is = new FileInputStream(new File(stdinPath));
 				System.setIn(is);
-			} else {
+			}
+			if (System.in == null) {
 				logger.error("No path provided to --path.file or to stdin, please set the path or pipe data in and restart");
-				int exitCode = SpringApplication.exit(appContext, () -> 1);
-				System.exit(exitCode);
 			}
 		}
 
@@ -69,8 +68,6 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 			logReader.readLog();
 		} else {
 			logger.error("No valid log reader available for {} reading", readerStrategy);
-			int exitCode = SpringApplication.exit(appContext, () -> 2);
-			System.exit(exitCode);
 		}
 
 	}

@@ -37,18 +37,8 @@
 
     <!-- LOG everything at INFO level to the rolling log file-->
     <root level="info">
-        <appender-ref ref="RollingFile"/>
-    </root>
-
-    <root level="warn">
-        <appender-ref ref="RollingFile"/>
-        <appender-ref ref="Console"/>
-    </root>
-
-    <!-- LOG only our alerters to the console at info level -->
-    <logger name="robb.william.httplogmonitor.alerters" level="info" additivity="false">
         <appender-ref ref="Console"/>
         <appender-ref ref="RollingFile"/>
-    </logger>
+    </root>
 
 </configuration>
