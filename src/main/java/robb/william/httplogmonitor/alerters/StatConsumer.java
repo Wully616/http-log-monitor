@@ -31,7 +31,7 @@ import java.util.*;
  */
 @Component
 @ConditionalOnProperty(prefix = "stats", name = "enabled", havingValue = "true")
-public final class StatConsumer implements EventHandler<LogEvent> {
+public class StatConsumer implements EventHandler<LogEvent> {
 
     private final Logger logger = LoggerFactory.getLogger(StatConsumer.class);
 
@@ -49,10 +49,12 @@ public final class StatConsumer implements EventHandler<LogEvent> {
 
     @Override
     public void onEvent(LogEvent logEvent, long l, boolean b) {
-        CommonLogFormat logLine = logEvent.getCommonLogFormat();
+        if (logEvent == null) return;
+        CommonLogFormat log = logEvent.getCommonLogFormat();
+        if (log == null) return;
 
         //Time bucket is a unix timestamp, clamped down to the nearest interval seconds
-        int timeBucket = ((int) (logLine.getDate() / interval)) * interval;
+        int timeBucket = ((int) (log.getDate() / interval)) * interval;
 
         //check if the interval has passed and print the stats
         if (timeBucket > currentTimeBucket) {
@@ -61,7 +63,7 @@ public final class StatConsumer implements EventHandler<LogEvent> {
         }
 
         //Store the stats in the current bucket
-        addToStats(logLine);
+        addToStats(log);
 
     }
 
