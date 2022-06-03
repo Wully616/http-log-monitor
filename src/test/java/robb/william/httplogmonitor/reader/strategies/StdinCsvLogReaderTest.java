@@ -80,6 +80,17 @@ public class StdinCsvLogReaderTest {
         verify(logEventBuffer, atLeastOnce()).publish(any());
     }
 
+    @Test
+    public void whenInvalidData_DoNotPublishData() throws IOException, InterruptedException {
+        setupStdIn(Path.of("", "src/test/java/resources/testdata/invalid-data.csv").toAbsolutePath().toString());
+        StdinCsvLogReader reader = new StdinCsvLogReader(logEventBuffer);
+        StdinCsvLogReader readerSpy = spy(reader);
+
+        readerSpy.readLog();
+        TimeUnit.MILLISECONDS.sleep(500);
+        verify(logEventBuffer, never()).publish(any());
+    }
+
 
     private void setupStdIn(String path) throws FileNotFoundException {
         FileInputStream is = new FileInputStream(new File(path));

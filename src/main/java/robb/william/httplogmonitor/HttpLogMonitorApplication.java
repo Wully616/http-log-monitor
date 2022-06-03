@@ -45,7 +45,7 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 		logger.info("Reading from: {}", readerStrategy);
 
 		if (readerStrategy == ReaderStrategy.STDIN && (stdinPath != null && !stdinPath.isEmpty())) {
-			//Set path.stdin property to simulate passing a file to std input if redirection/piping is not availble, like in intellij
+			//Set path.stdin property to simulate passing a file to std input if redirection/piping is not available, like in intellij
 			FileInputStream is = new FileInputStream(new File(stdinPath));
 			System.setIn(is);
 		}

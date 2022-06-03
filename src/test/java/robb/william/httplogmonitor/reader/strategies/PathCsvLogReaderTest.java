@@ -70,11 +70,22 @@ public class PathCsvLogReaderTest {
     }
 
     @Test
-    public void whenValidPath_publishData() throws IOException, InterruptedException {
+    public void whenValidPath_publishData() throws InterruptedException {
         PathCsvLogReader reader = new PathCsvLogReader(logEventBuffer, Path.of("", "src/test/java/resources/testdata/valid-data.csv").toAbsolutePath().toString());
         PathCsvLogReader readerSpy = spy(reader);
         readerSpy.readLog();
         TimeUnit.MILLISECONDS.sleep(500);
         verify(logEventBuffer, atLeastOnce()).publish(any());
+    }
+
+    @Test
+    public void whenInvalidData_DoNotPublishData() throws InterruptedException {
+        PathCsvLogReader reader = new PathCsvLogReader(logEventBuffer, Path.of("", "src/test/java/resources/testdata/invalid-data.csv").toAbsolutePath().toString());
+        PathCsvLogReader readerSpy = spy(reader);
+        readerSpy.readLog();
+
+        readerSpy.readLog();
+        TimeUnit.MILLISECONDS.sleep(500);
+        verify(logEventBuffer, never()).publish(any());
     }
 }

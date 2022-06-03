@@ -8,6 +8,6 @@ import robb.william.httplogmonitor.reader.model.CommonLogFormat;
     The Disruptor will be preallocated with these objects.
  */
 @Data
-public final class LogEvent {
+public class LogEvent {
     private CommonLogFormat commonLogFormat;
 }

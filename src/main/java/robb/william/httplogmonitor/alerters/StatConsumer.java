@@ -1,6 +1,7 @@
 package robb.william.httplogmonitor.alerters;
 
 import com.lmax.disruptor.EventHandler;
+import org.assertj.core.util.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +43,7 @@ public class StatConsumer implements EventHandler<LogEvent> {
     private long currentTimeBucket = -1;
 
     public StatConsumer(@Value("${stats.printInterval}") int interval) {
-        this.interval = interval;
+        this.interval = Math.max(1, interval);
         sectionStats = new HashMap<>();
         sb = new StringBuilder();
     }
@@ -54,7 +55,7 @@ public class StatConsumer implements EventHandler<LogEvent> {
         if (log == null) return;
 
         //Time bucket is a unix timestamp, clamped down to the nearest interval seconds
-        int timeBucket = ((int) (log.getDate() / interval)) * interval;
+        int timeBucket = getTimeBucket(log.getDate());
 
         //check if the interval has passed and print the stats
         if (timeBucket > currentTimeBucket) {
@@ -67,12 +68,26 @@ public class StatConsumer implements EventHandler<LogEvent> {
 
     }
 
-    private void printStats(int timeBucket) {
+    @VisibleForTesting
+    protected Optional<SectionStat> getSectionStat(String key) {
+        if (key == null || key.isEmpty()) return Optional.empty();
+        if (sectionStats == null || sectionStats.isEmpty()) return Optional.empty();
+
+        return Optional.ofNullable(sectionStats.get(key));
+    }
+
+    @VisibleForTesting
+    protected int getTimeBucket(long date) {
+        return ((int) (date / interval)) * interval;
+    }
+
+    @VisibleForTesting
+    protected void printStats(int timeBucket) {
         //we have entered a new bucket, print the current stats, wipe and continue
         if (sectionStats.isEmpty()) return;
 
-        sb.append("\nHTTP Stats for last ").append(interval).append(" seconds from: ").append(currentTimeBucket)
-                .append(" to ").append(timeBucket + 1);
+        sb.append(currentTimeBucket).append(" : ").append("HTTP Stats for last ").append(interval).append(" seconds from: ").append(currentTimeBucket)
+                .append(" to ").append(timeBucket - 1);
 
         sectionStats.entrySet().stream()
                 .sorted(Collections.reverseOrder(Comparator.comparingInt(e -> e.getValue().getTotalRequests())))
@@ -82,6 +97,7 @@ public class StatConsumer implements EventHandler<LogEvent> {
                     sb.append("\n\tSection: ").append(section);
                     sb.append("\n--------------------------------------------");
                     sb.append("\n\tTotal Hits: ").append(stats.getTotalRequests());
+                    sb.append("\n\tTotal Bytes: ").append(stats.getBytes());
                     sb.append("\n\tRemote Hosts: ").append(stats.getHosts().size());
                     sb.append("\n\tHTTP Status: ").append(stats.getResponseStatus());
                     sb.append("\n\tRequest Types: ").append(stats.getRequestMethods());
@@ -96,17 +112,19 @@ public class StatConsumer implements EventHandler<LogEvent> {
 
     }
 
-    private void clearStats() {
+    @VisibleForTesting
+    protected void clearStats() {
         sectionStats.forEach((key, value) -> value.clearStats());
     }
 
-    private void addToStats(CommonLogFormat log) {
+    @VisibleForTesting
+    protected void addToStats(CommonLogFormat log) {
         //add to the current buckets stats
         SectionStat stats = sectionStats.computeIfAbsent(log.getSection(), l -> new SectionStat());
         stats.addStats(log);
     }
 
-    private static class SectionStat {
+    protected static class SectionStat {
         private final Set<String> hosts;
         //Contains stats for http response statuses, 1xx,2xx,3xx,4xx,5xx
         private final Map<Integer, Integer> responseStatus;
@@ -155,6 +173,10 @@ public class StatConsumer implements EventHandler<LogEvent> {
             responseStatus.merge(status, 1, Integer::sum);
             requestMethods.merge(log.getVerb(), 1, Integer::sum);
 
+        }
+
+        public int getBytes() {
+            return bytes;
         }
 
         public int getTotalRequests() {

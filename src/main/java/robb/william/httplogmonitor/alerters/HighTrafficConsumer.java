@@ -84,7 +84,7 @@ public class HighTrafficConsumer implements EventHandler<LogEvent> {
 
     @VisibleForTesting
     protected void onAlertTriggered(float value) {
-        logger.warn("High traffic generated an alert - hits = {}, triggered at {}", value, headTimestamp);
+        logger.warn("{} : High traffic generated an alert - hits = {}, triggered at {}", headTimestamp, value, headTimestamp);
         alertActive = true;
         //if the alert is raised, we dont need to evaluate again until the window period moves
         shouldEvaluate = false;
@@ -92,7 +92,7 @@ public class HighTrafficConsumer implements EventHandler<LogEvent> {
 
     @VisibleForTesting
     protected void onAlertStopped(float value) {
-        logger.info("Recovered from high traffic - hits = {}, recovered at {}", value, headTimestamp);
+        logger.info("{} : Recovered from high traffic - hits = {}, recovered at {}", headTimestamp, value, headTimestamp);
         alertActive = false;
     }
 
