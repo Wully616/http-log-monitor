@@ -3,6 +3,7 @@ package robb.william.httplogmonitor.reader.strategies;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import org.assertj.core.util.VisibleForTesting;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
 public abstract class CsvLogReader implements ILogReader {
     public static final Logger logger = LoggerFactory.getLogger(CsvLogReader.class);
 
-    private final CsvMapper mapper = new CsvMapper();
+    private final CsvMapper mapper = new CsvMapper().configure(CsvParser.Feature.FAIL_ON_MISSING_COLUMNS, true);
 
     private final String expectedHeader = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\"";
 
@@ -45,7 +46,6 @@ public abstract class CsvLogReader implements ILogReader {
     private final LogEventBuffer logEventBuffer;
 
     private boolean shouldRead = true;
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public CsvLogReader(LogEventBuffer logEventBuffer) {
         this.logEventBuffer = logEventBuffer;
@@ -85,14 +85,12 @@ public abstract class CsvLogReader implements ILogReader {
                 logger.error("Log input data stream is null");
             }
         };
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(task);
         return task;
 
     }
 
-    public void setExecutorService(ExecutorService service) {
-        executorService = service;
-    }
 
     @VisibleForTesting
     public CommonLogFormat extractAdditionalFields(CommonLogFormat log) {
