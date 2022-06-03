@@ -7,6 +7,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 import robb.william.httplogmonitor.reader.factory.LogReaderFactory;
 import robb.william.httplogmonitor.reader.strategies.ILogReader;
 import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
@@ -25,14 +26,20 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 
 	private final LogReaderFactory logReaderFactory;
 
+	private ApplicationContext appContext;
+
 	public static void main(String[] args) {
 		SpringApplication.run(HttpLogMonitorApplication.class, args);
 	}
 
-	public HttpLogMonitorApplication(@Value("${path.file}") String filePath, @Value("${path.stdin}") String stdinPath, LogReaderFactory logReaderFactory) {
+	public HttpLogMonitorApplication(@Value("${path.file}") String filePath,
+									 @Value("${path.stdin}") String stdinPath,
+									 LogReaderFactory logReaderFactory,
+									 ApplicationContext appContext) {
 		this.filePath = filePath;
 		this.stdinPath = stdinPath;
 		this.logReaderFactory = logReaderFactory;
+		this.appContext = appContext;
 	}
 
 	@Override
@@ -44,10 +51,16 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 		ReaderStrategy readerStrategy = (filePath != null && !filePath.isEmpty()) ? ReaderStrategy.FILE : ReaderStrategy.STDIN;
 		logger.info("Reading from: {}", readerStrategy);
 
-		if (readerStrategy == ReaderStrategy.STDIN && (stdinPath != null && !stdinPath.isEmpty())) {
-			//Set path.stdin property to simulate passing a file to std input if redirection/piping is not available, like in intellij
-			FileInputStream is = new FileInputStream(new File(stdinPath));
-			System.setIn(is);
+		if (readerStrategy == ReaderStrategy.STDIN) {
+			if (stdinPath != null && !stdinPath.isEmpty()) {
+				//Set path.stdin property to simulate passing a file to std input if redirection/piping is not available, like in intellij
+				FileInputStream is = new FileInputStream(new File(stdinPath));
+				System.setIn(is);
+			} else {
+				logger.error("No path provided to --path.file or to stdin, please set the path or pipe data in and restart");
+				int exitCode = SpringApplication.exit(appContext, () -> 1);
+				System.exit(exitCode);
+			}
 		}
 
 		ILogReader logReader = logReaderFactory.getStrategy(readerStrategy);
@@ -56,6 +69,8 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 			logReader.readLog();
 		} else {
 			logger.error("No valid log reader available for {} reading", readerStrategy);
+			int exitCode = SpringApplication.exit(appContext, () -> 2);
+			System.exit(exitCode);
 		}
 
 	}

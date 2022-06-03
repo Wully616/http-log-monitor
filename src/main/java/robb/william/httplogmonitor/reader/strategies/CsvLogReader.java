@@ -57,7 +57,7 @@ public abstract class CsvLogReader implements ILogReader {
     }
 
     @Override
-    public Runnable readLog() {
+    public void readLog() {
         Runnable task = () -> {
             InputStream inputStream = getLogStream();
             if (inputStream != null) {
@@ -87,8 +87,6 @@ public abstract class CsvLogReader implements ILogReader {
         };
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(task);
-        return task;
-
     }
 
 

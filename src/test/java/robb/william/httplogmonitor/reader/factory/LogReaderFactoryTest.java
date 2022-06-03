@@ -58,9 +58,7 @@ public class LogReaderFactoryTest {
             }
 
             @Override
-            public Runnable readLog() {
-                return () -> {
-                };
+            public void readLog() {
             }
         };
 
@@ -84,9 +82,7 @@ public class LogReaderFactoryTest {
             }
 
             @Override
-            public Runnable readLog() {
-                return () -> {
-                };
+            public void readLog() {
             }
         };
 
