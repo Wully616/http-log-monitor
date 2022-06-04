@@ -34,7 +34,7 @@ import java.util.*;
 @ConditionalOnProperty(prefix = "stats", name = "enabled", havingValue = "true")
 public class StatConsumer implements EventHandler<LogEvent> {
 
-    private final Logger logger = LoggerFactory.getLogger(StatConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(StatConsumer.class);
 
     private final Map<String, SectionStat> sectionStats;
 
@@ -89,6 +89,7 @@ public class StatConsumer implements EventHandler<LogEvent> {
         sb.append(currentTimeBucket).append(" : ").append("HTTP Stats for last ").append(interval).append(" seconds from: ").append(currentTimeBucket)
                 .append(" to ").append(timeBucket - 1);
 
+        //Print out each sections stats, ordered by total Requests
         sectionStats.entrySet().stream()
                 .sorted(Collections.reverseOrder(Comparator.comparingInt(e -> e.getValue().getTotalRequests())))
                 .forEachOrdered(e -> {

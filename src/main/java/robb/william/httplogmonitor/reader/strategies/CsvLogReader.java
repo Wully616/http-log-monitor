@@ -23,11 +23,7 @@ import java.util.regex.Pattern;
 public abstract class CsvLogReader implements ILogReader {
     public static final Logger logger = LoggerFactory.getLogger(CsvLogReader.class);
 
-    private final CsvMapper mapper = new CsvMapper().configure(CsvParser.Feature.FAIL_ON_MISSING_COLUMNS, true);
-
-    private final String expectedHeader = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\"";
-
-    private static final Pattern sectionPattern = Pattern.compile("(\\w+)\\s\\/(\\w+|\\d+)[\\/|\\s]");
+    private static final Pattern sectionPattern = Pattern.compile("(\\w+)\\s\\/([^\\/]+)[\\/|\\s]");
 
     private static final CsvSchema schema = CsvSchema.builder()
             .addColumn("remoteHost")
@@ -38,6 +34,10 @@ public abstract class CsvLogReader implements ILogReader {
             .addColumn("status")
             .addColumn("bytes")
             .build();
+
+    private final CsvMapper mapper = new CsvMapper().configure(CsvParser.Feature.FAIL_ON_MISSING_COLUMNS, true);
+
+    private final String expectedHeader = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\"";
 
     private final ObjectReader reader = mapper
             .readerFor(CommonLogFormat.class)
@@ -102,7 +102,6 @@ public abstract class CsvLogReader implements ILogReader {
 
     @VisibleForTesting
     public Optional<CommonLogFormat> parseLogLine(String line) {
-
         try {
             return Optional.of(reader.readValue(line));
         } catch (JsonProcessingException e) {

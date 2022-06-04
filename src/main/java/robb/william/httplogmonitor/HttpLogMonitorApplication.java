@@ -7,7 +7,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
 import robb.william.httplogmonitor.reader.factory.LogReaderFactory;
 import robb.william.httplogmonitor.reader.strategies.ILogReader;
 import robb.william.httplogmonitor.reader.strategies.ReaderStrategy;
@@ -26,20 +25,16 @@ public class HttpLogMonitorApplication implements ApplicationRunner {
 
 	private final LogReaderFactory logReaderFactory;
 
-	private ApplicationContext appContext;
-
 	public static void main(String[] args) {
 		SpringApplication.run(HttpLogMonitorApplication.class, args);
 	}
 
 	public HttpLogMonitorApplication(@Value("${path.file}") String filePath,
 									 @Value("${path.stdin}") String stdinPath,
-									 LogReaderFactory logReaderFactory,
-									 ApplicationContext appContext) {
+									 LogReaderFactory logReaderFactory) {
 		this.filePath = filePath;
 		this.stdinPath = stdinPath;
 		this.logReaderFactory = logReaderFactory;
-		this.appContext = appContext;
 	}
 
 	@Override

@@ -18,7 +18,7 @@ import java.io.InputStream;
 public class PathCsvLogReader extends CsvLogReader {
     private static final Logger logger = LoggerFactory.getLogger(PathCsvLogReader.class);
 
-    String filePath;
+    private final String filePath;
 
     @Autowired
     public PathCsvLogReader(LogEventBuffer logEventBuffer, @Value("${path.file}") String filePath) {

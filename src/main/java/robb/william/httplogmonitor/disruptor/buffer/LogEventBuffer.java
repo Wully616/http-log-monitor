@@ -16,7 +16,7 @@ import robb.william.httplogmonitor.reader.model.CommonLogFormat;
 @Component
 public class LogEventBuffer {
 
-    private final Logger logger = LoggerFactory.getLogger(LogEventBuffer.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogEventBuffer.class);
 
     private final Disruptor<LogEvent> logEventDisruptor;
     private final EventHandler<LogEvent>[] logEventConsumers;

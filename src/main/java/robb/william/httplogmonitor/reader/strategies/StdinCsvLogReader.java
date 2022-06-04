@@ -12,7 +12,7 @@ import java.io.InputStream;
 @Component
 @ConditionalOnExpression("'${path.file}' == '' || '${path.stdin}' != ''")
 public class StdinCsvLogReader extends CsvLogReader {
-    Logger logger = LoggerFactory.getLogger(StdinCsvLogReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(StdinCsvLogReader.class);
 
     @Autowired
     public StdinCsvLogReader(LogEventBuffer logEventBuffer) {

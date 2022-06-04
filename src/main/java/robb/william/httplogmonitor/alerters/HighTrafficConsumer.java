@@ -14,14 +14,14 @@ import robb.william.httplogmonitor.reader.model.CommonLogFormat;
 @ConditionalOnProperty(prefix = "highTrafficAlert", name = "enabled", havingValue = "true")
 public class HighTrafficConsumer implements EventHandler<LogEvent> {
 
-    private final Logger logger = LoggerFactory.getLogger(HighTrafficConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(HighTrafficConsumer.class);
 
     //Store traffic for X seconds in a circular buffer
     //Each array index is a 1 second bucket
     private final int[] circularBuffer;
     private final int bufferSize;
-
     private final int alertThreshold;
+
     private boolean shouldEvaluate;
     private boolean alertActive = false;
 
@@ -35,7 +35,6 @@ public class HighTrafficConsumer implements EventHandler<LogEvent> {
         this.bufferSize = Math.max(1, sampleWindow);
         this.alertThreshold = threshold;
         this.circularBuffer = new int[bufferSize];
-
     }
 
     @Override
