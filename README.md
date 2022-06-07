@@ -106,3 +106,7 @@ WARN r.w.h.alerters.HighTrafficConsumer : 1549573957 : High traffic generated an
 ```
 INFO r.w.h.alerters.HighTrafficConsumer : 1549574049 : Recovered from high traffic - hits = 9.908334, recovered at 1549574049
 ```
+
+
+
+- William Robb
